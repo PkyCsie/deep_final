@@ -34,9 +34,8 @@ def question_makeItEasyToUse(file_name,image_to_question,model):
     file.close()
 
 
-def choices_makeItEasyToUse(file_name,write_file_name,model):
+def choices_makeItEasyToUse(file_name,model):
     file = open(file_name,'r')
-    write_file = open(write_file_name,'w')
     file.readline()#fist row is not sentence
     no = 0
     error = {}
@@ -44,6 +43,7 @@ def choices_makeItEasyToUse(file_name,write_file_name,model):
         sentence = line.replace("\n",'').replace("(A)",'[').replace("(B)",'[').replace("(C)",'[').replace("(D)",'[').replace("(E)",'[').replace("\"",'')
         choice = sentence.split('\t')[2:]
         choice =  choice[0].split('[')[1:]
+    '''
         for answer in choice:
            ave_ans_vec = np.zeros(300)
            length = 0.0
@@ -56,6 +56,7 @@ def choices_makeItEasyToUse(file_name,write_file_name,model):
                     error[word] = error.get(word,0) + 1
     for key in error:
         write_file.write(key+': '+str(error[key])+'\n')
+    '''
         '''
         for choice in sentence:
             if choice!='' and choice.split(' ')[0] != ''and choice.split(' ')[0] != ' ':
@@ -64,7 +65,6 @@ def choices_makeItEasyToUse(file_name,write_file_name,model):
         #no += 1
         #assert no !=5,"no = 2"
     file.close()
-    write_file.close()
     
     
 def creat_hash_table_image_to_question(file_name):    
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     model = Word2Vec.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
     image_to_question = creat_hash_table_image_to_question('answer.train_sol')
     question_makeItEasyToUse('question.train',image_to_question,model)
-    print image_to_question
+    choices_makeItEasyToUse('choices.train',image_to_question,model)
     '''
     file_name = 'choices.train'
     write_file_name = 'where_is_not_key'
