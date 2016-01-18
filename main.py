@@ -21,42 +21,42 @@ def _cosine_cost(y, y_):
     return -tf.reduce_mean(tf.matmul(y, y_, transpose_b=True))
 
 
-word_vec_dim = 100
+word_vec_dim = 300
 conv_dim = 192
 concate_dim = word_vec_dim + conv_dim
 
 question = tf.placeholder(tf.float32, [None, None])
-answer = tf.placeholder(tf.float32, [None, 100])
-choice1 = tf.placeholder(tf.float32, [None, 100])
-choice2 = tf.placeholder(tf.float32, [None, 100])
-choice3 = tf.placeholder(tf.float32, [None, 100])
-choice4 = tf.placeholder(tf.float32, [None, 100])
-conv_feature = tf.placeholder(tf.float32, [None,192])
+answer = tf.placeholder(tf.float32, [None, None])
+choice1 = tf.placeholder(tf.float32, [None, None])
+choice2 = tf.placeholder(tf.float32, [None, None])
+choice3 = tf.placeholder(tf.float32, [None, None])
+choice4 = tf.placeholder(tf.float32, [None, None])
+conv_feature = tf.placeholder(tf.float32, [None,conv_dim])
 conv_feature_2 = tf.reshape(conv_feature,[5041,-1])
 
-W = tf.Variable(tf.random_normal([192, 192], 0, 0.1))
-b = tf.Variable(tf.zeros([192]))
+W = tf.Variable(tf.random_normal([conv_dim, conv_dim], 0, 0.1))
+b = tf.Variable(tf.zeros([conv_dim]))
 
-qw = tf.Variable(tf.random_normal([100, 192], 0, 0.1))
+qw = tf.Variable(tf.random_normal([word_vec_dim, conv_dim], 0, 0.1))
 
-W1 = tf.Variable(tf.random_normal([192, 1], 0, 0.1))
+W1 = tf.Variable(tf.random_normal([conv_dim, 1], 0, 0.1))
 b1 = tf.Variable(tf.zeros([1]))
 
 
-W2 = tf.Variable(tf.random_normal([concate_dim, concate_dim], 0, 0.1))
+W2 = tf.Variable(tf.random_normal([concate_dim, concate_dim], 0, 0.01))
 b2 = tf.Variable(tf.zeros([concate_dim]))
 
 
-W3 = tf.Variable(tf.random_normal([concate_dim, concate_dim], 0, 0.1))
+W3 = tf.Variable(tf.random_normal([concate_dim, concate_dim], 0, 0.01))
 b3 = tf.Variable(tf.zeros([concate_dim]))
 
-W4 = tf.Variable(tf.random_normal([concate_dim, concate_dim], 0, 0.1))
+W4 = tf.Variable(tf.random_normal([concate_dim, concate_dim], 0, 0.01))
 b4 = tf.Variable(tf.zeros([concate_dim]))
 
-W4 = tf.Variable(tf.random_normal([concate_dim, concate_dim], 0, 0.1))
+W4 = tf.Variable(tf.random_normal([concate_dim, concate_dim], 0, 0.01))
 b4 = tf.Variable(tf.zeros([concate_dim]))
 
-W5 = tf.Variable(tf.random_normal([concate_dim, word_vec_dim], 0, 0.1))
+W5 = tf.Variable(tf.random_normal([concate_dim, word_vec_dim], 0, 0.01))
 b5 = tf.Variable(tf.zeros([word_vec_dim]))
 
 
@@ -72,11 +72,6 @@ hidden_3 = tf.matmul(hidden_2,W4) + b4
 out_layer = tf.matmul(hidden_3,W5) + b5 
 
 cost = tf.reduce_mean(tf.square(out_layer - answer))
-cost1 = tf.reduce_mean(tf.square(out_layer - answer))
-cost2 = tf.reduce_mean(tf.square(out_layer - choice1))   
-cost3 = tf.reduce_mean(tf.square(out_layer - choice2))
-cost4 = tf.reduce_mean(tf.square(out_layer - choice3))
-cost5 = tf.reduce_mean(tf.square(out_layer - choice4))
        
        
 train_step = tf.train.AdagradOptimizer(0.01).minimize(cost)
@@ -84,7 +79,6 @@ saver = tf.train.Saver()
 
 if __name__ == '__main__':
 
-    #image_to_question = creat_hash_table_image_to_question('answer.train_sol')
     train_image_path = "/home/shen/Downloads/deep_final/train2014"
     
     print 'start:'
@@ -93,38 +87,37 @@ if __name__ == '__main__':
     image_to_question = CleanFile.creat_hash_table_image_to_question('answer.train_sol')
     CleanFile.question_makeItEasyToUse('question.train',image_to_question,model)
     CleanFile.choices_makeItEasyToUse('choices.train',image_to_question,model)
-    
+    '''
     print 'finish read question and choice'
     for key in image_to_question:
         print image_to_question[key][0][image_to_question[key][0][1] + 1]
         print image_to_question[key][0][len(image_to_question[key][0])-1]
     
         assert 2==1,'stop'
-    
+    '''
     dirs = os.listdir(train_image_path)
     image_list = []
-   
-    for file in dirs:
-        image_list.append(train_image_path+'/'+file)
-        if len(image_list) == 1:
-            questions = 100*np.ones((1,100))
-            answers = np.ones((1,100))
-            otherChoice1 = np.random.rand(1,100)
-            otherChoice2 = np.random.rand(1,100)
-            otherChoice3 = np.random.rand(1,100)
-            otherChoice4 = np.random.rand(1,100)
+    image_id = []
+    for key in image_to_question:
+        image_list.append(train_image_path+'/'+'COCO_train2014_000000'+key+'.jpg')
+        image_id.append(key)
+        if len(image_list) == 100:
             conv_array = classify_image.run_inference_on_image(image_list)
             sess = tf.Session()
             #saver.restore(sess,'my-model-90')
             sess.run(tf.initialize_all_variables())
-            for s in xrange (100):
-                ss = sess.run([cost,cost1,cost2,cost3,cost4,cost5,train_step],feed_dict={conv_feature:np.array(conv_array),question:questions,answer:answers,\
-                                                           choice1:otherChoice1,choice2:otherChoice2,choice3:otherChoice3,\
-                                                           choice4:otherChoice4,})
-                if s % 10 == 0:
-                    saver.save(sess, 'my-model', global_step=s)
-                print ss[0],ss[1],ss[2],ss[3],ss[4],ss[5]
+            
+            for i in xrange(len(image_id)):
+                this_image_id = image_id[i]
+                for j in xrange(len(image_to_question[this_image_id])):
+                    ss = sess.run([cost,train_step],feed_dict={conv_feature:conv_array[i],question:image_to_question[this_image_id][j][2],answer:image_to_question[this_image_id][j][-1]})
+                    print ss[0]
+                    print image_to_question[this_image_id][j][-1]
+                    print image_to_question[this_image_id][j][2]
+                    
+            
+            saver.save(sess, 'my-model', global_step=0)
             sess.close()
-            print file
+            image_list = []
+            image_id = []
             break
-    

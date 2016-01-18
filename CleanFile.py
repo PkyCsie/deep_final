@@ -28,7 +28,7 @@ def question_makeItEasyToUse(file_name,image_to_question,model):
                         continue
         for question in image_to_question[sentence[0]]:
             if  question[0] == sentence[1]:
-                   question.append(vec_average/length)
+                   question.append(np.array([vec_average/length]))
                    break
     file.close()
 
@@ -59,8 +59,8 @@ def choices_makeItEasyToUse(file_name,image_to_question,model):
                         except:
                             #print word
                             continue
-                    question.append(ave_ans_vec/length)                
-                question.append(question[question[1]+1]) #question id, which one is answer ,so answer = 1 + which one
+                    question.append(np.array([ave_ans_vec/length]))                
+                question.append(question[question[1]+2]) #question id, which one is answer ,so answer = 1 + which one
     
     
         #no += 1

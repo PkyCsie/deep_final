@@ -105,9 +105,9 @@ def run_inference_on_image(image_list):
     conv_tensor = sess.graph.get_tensor_by_name('conv_4:0')
     for image in image_list:
         image_data = gfile.FastGFile(image, 'rb').read()
-        conv_list.append(sess.run(conv_tensor, {'DecodeJpeg/contents:0': image_data})[0])
+        conv_list.append(np.reshape(sess.run(conv_tensor, {'DecodeJpeg/contents:0': image_data})[0],[-1,192]))
    
-    return np.reshape(np.array(conv_list),[-1,192])
+    return conv_list
         
     
   
