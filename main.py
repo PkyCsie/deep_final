@@ -96,12 +96,10 @@ if __name__ == '__main__':
     
     print 'finish read question and choice'
     for key in image_to_question:
-        print key
-        print image_to_question[key][0][1]
         print image_to_question[key][0][image_to_question[key][0][1] + 1]
         print image_to_question[key][0][len(image_to_question[key][0])-1]
     
-    assert 2==1,'stop'
+        assert 2==1,'stop'
     
     dirs = os.listdir(train_image_path)
     image_list = []
