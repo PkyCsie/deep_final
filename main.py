@@ -98,26 +98,37 @@ if __name__ == '__main__':
     dirs = os.listdir(train_image_path)
     image_list = []
     image_id = []
-    for key in image_to_question:
-        image_list.append(train_image_path+'/'+'COCO_train2014_000000'+key+'.jpg')
-        image_id.append(key)
-        if len(image_list) == 100:
-            conv_array = classify_image.run_inference_on_image(image_list)
-            sess = tf.Session()
-            #saver.restore(sess,'my-model-90')
-            sess.run(tf.initialize_all_variables())
-            
-            for i in xrange(len(image_id)):
-                this_image_id = image_id[i]
-                for j in xrange(len(image_to_question[this_image_id])):
-                    ss = sess.run([cost,train_step],feed_dict={conv_feature:conv_array[i],question:image_to_question[this_image_id][j][2],answer:image_to_question[this_image_id][j][-1]})
-                    print ss[0]
-                    print image_to_question[this_image_id][j][-1]
-                    print image_to_question[this_image_id][j][2]
-                    
-            
-            saver.save(sess, 'my-model', global_step=0)
-            sess.close()
-            image_list = []
-            image_id = []
-            break
+    for number in xrange(100):
+        nos = 0
+        for key in image_to_question:
+            image_list.append(train_image_path+'/'+'COCO_train2014_000000'+key+'.jpg')
+            image_id.append(key)
+            if len(image_list) == 10:
+                conv_array = classify_image.run_inference_on_image(image_list)
+                sess = tf.Session()
+                saver.restore(sess,'my-model-0')
+                #sess.run(tf.initialize_all_variables())
+                
+                costs = 0
+                for i in xrange(len(image_id)):
+                    this_image_id = image_id[i]
+                    for j in xrange(len(image_to_question[this_image_id])):
+                        costs = sess.run([cost,train_step],feed_dict={conv_feature:conv_array[i],question:image_to_question[this_image_id][j][2],answer:image_to_question[this_image_id][j][-1]})[0]
+                        if costs != costs:
+                            print image_to_question[this_image_id][j][0]
+                            print image_to_question[this_image_id][j][1]
+                            print image_to_question[this_image_id][j][2 + image_to_question[this_image_id][j][1]]
+                            print ss[0]
+                            print image_to_question[this_image_id][j][-1]
+                            print image_to_question[this_image_id][j][2]
+                            assert 2==1,'error'                
+               
+                saver.save(sess, 'my-model', global_step=0)
+                sess.close()
+                image_list = []
+                image_id = []
+                print costs    
+        if nos%1000 == 0:
+            saver.save(sess, 'nos-model', global_step=nos)
+                
+        nos += 1        
