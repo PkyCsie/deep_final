@@ -74,7 +74,7 @@ def create_graph():
     _ = tf.import_graph_def(graph_def, name='')
 
 
-def run_inference_on_image(image_path):
+def run_inference_on_image(image_list):
  
 
   # Creates graph from saved GraphDef.
@@ -101,10 +101,13 @@ def run_inference_on_image(image_path):
         print "\n"
     file.close()
     '''
-    
+    conv_list = []
     conv_tensor = sess.graph.get_tensor_by_name('conv_4:0')
-    image_data = gfile.FastGFile(image_path, 'rb').read()
-    return  sess.run(conv_tensor, {'DecodeJpeg/contents:0': image_data})
+    for image in image_list:
+        image_data = gfile.FastGFile(image, 'rb').read()
+        conv_list.append(sess.run(conv_tensor, {'DecodeJpeg/contents:0': image_data})[0])
+   
+    return np.reshape(np.array(conv_list),[-1,192])
         
     
   

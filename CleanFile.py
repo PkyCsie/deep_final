@@ -1,4 +1,3 @@
-# coding=UTF-8
 #!/usr/bin/env python
 from gensim.models import Word2Vec
 import numpy as np
@@ -34,34 +33,35 @@ def question_makeItEasyToUse(file_name,image_to_question,model):
     file.close()
 
 
-def choices_makeItEasyToUse(file_name,model):
+def choices_makeItEasyToUse(file_name,image_to_question,model):
     file = open(file_name,'r')
     file.readline()#fist row is not sentence
     no = 0
     error = {}
     for line in file: 
         sentence = line.replace("\n",'').replace("(A)",'[').replace("(B)",'[').replace("(C)",'[').replace("(D)",'[').replace("(E)",'[').replace("\"",'')
-        choice = sentence.split('\t')[2:]
+        sentence = sentence.split('\t')
+        choice = sentence[2:]
+        question_id = sentence[1]
         choice =  choice[0].split('[')[1:]
-    '''
-        for answer in choice:
-           ave_ans_vec = np.zeros(300)
-           length = 0.0
-           for word in answer.split(' '):
-                try:
-                    ave_ans_vec += model[word]
-                    length += 1.0
-                except:
-                    print word
-                    error[word] = error.get(word,0) + 1
-    for key in error:
-        write_file.write(key+': '+str(error[key])+'\n')
-    '''
-        '''
-        for choice in sentence:
-            if choice!='' and choice.split(' ')[0] != ''and choice.split(' ')[0] != ' ':
-                write_file.write(choice+'\n')
-        '''
+        
+        
+        
+        for question in image_to_question[sentence[0]]:
+            if  question[0] == sentence[1]:
+                for answer in choice:
+                    ave_ans_vec = np.zeros(300)
+                    length = 0.0
+                    for word in answer.split(' '):
+                        try:
+                            ave_ans_vec += model[word]
+                            length += 1.0
+                        except:
+                            print word
+                    question.append(ave_ans_vec/length)                
+    
+    
+    
         #no += 1
         #assert no !=5,"no = 2"
     file.close()
@@ -83,6 +83,8 @@ if __name__ == '__main__':
     image_to_question = creat_hash_table_image_to_question('answer.train_sol')
     question_makeItEasyToUse('question.train',image_to_question,model)
     choices_makeItEasyToUse('choices.train',image_to_question,model)
+    print image_to_question
+    
     '''
     file_name = 'choices.train'
     write_file_name = 'where_is_not_key'
