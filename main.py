@@ -10,7 +10,7 @@ import os,sys
 import CleanFile
 
 import tensorflow as tf
-
+from gensim.models import Word2Vec
 
 def _cosine_cost(y, y_):
     def norm(v):
@@ -71,8 +71,14 @@ hidden_3 = tf.matmul(hidden_2,W4) + b4
 
 out_layer = tf.matmul(hidden_3,W5) + b5 
 
-cost = _cosine_cost(out_layer,answer)
-
+cost = tf.reduce_mean(tf.square(out_layer - answer))
+cost1 = tf.reduce_mean(tf.square(out_layer - answer))
+cost2 = tf.reduce_mean(tf.square(out_layer - choice1))   
+cost3 = tf.reduce_mean(tf.square(out_layer - choice2))
+cost4 = tf.reduce_mean(tf.square(out_layer - choice3))
+cost5 = tf.reduce_mean(tf.square(out_layer - choice4))
+       
+       
 train_step = tf.train.AdagradOptimizer(0.01).minimize(cost)
 saver = tf.train.Saver()
 
@@ -81,6 +87,21 @@ if __name__ == '__main__':
     #image_to_question = creat_hash_table_image_to_question('answer.train_sol')
     train_image_path = "/home/shen/Downloads/deep_final/train2014"
     
+    print 'start:'
+    model = Word2Vec.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
+    print 'finish reading model'
+    image_to_question = CleanFile.creat_hash_table_image_to_question('answer.train_sol')
+    CleanFile.question_makeItEasyToUse('question.train',image_to_question,model)
+    CleanFile.choices_makeItEasyToUse('choices.train',image_to_question,model)
+    
+    print 'finish read question and choice'
+    for key in image_to_question:
+        print key
+        print image_to_question[key][0][1]
+        print image_to_question[key][0][image_to_question[key][0][1] + 1]
+        print image_to_question[key][0][len(image_to_question[key][0])-1]
+    
+    assert 2==1,'stop'
     
     dirs = os.listdir(train_image_path)
     image_list = []
@@ -88,23 +109,23 @@ if __name__ == '__main__':
     for file in dirs:
         image_list.append(train_image_path+'/'+file)
         if len(image_list) == 1:
-            questions = -100*np.ones((1,100))
+            questions = 100*np.ones((1,100))
             answers = np.ones((1,100))
-            otherChoice1 = np.array([[0.1]*100])
-            otherChoice2 = np.array([[0.2]*100])
-            otherChoice3 = np.array([[0.3]*100])
-            otherChoice4 = np.array([[0.5]*100])
+            otherChoice1 = np.random.rand(1,100)
+            otherChoice2 = np.random.rand(1,100)
+            otherChoice3 = np.random.rand(1,100)
+            otherChoice4 = np.random.rand(1,100)
             conv_array = classify_image.run_inference_on_image(image_list)
             sess = tf.Session()
-            saver.restore(sess,'my-model-90')
-            #sess.run(tf.initialize_all_variables())
+            #saver.restore(sess,'my-model-90')
+            sess.run(tf.initialize_all_variables())
             for s in xrange (100):
-                ss = sess.run([cost,train_step],feed_dict={conv_feature:np.array(conv_array),question:questions,answer:answers,\
+                ss = sess.run([cost,cost1,cost2,cost3,cost4,cost5,train_step],feed_dict={conv_feature:np.array(conv_array),question:questions,answer:answers,\
                                                            choice1:otherChoice1,choice2:otherChoice2,choice3:otherChoice3,\
                                                            choice4:otherChoice4,})
-                #if s % 10 == 0:
-                #    saver.save(sess, 'my-model', global_step=s)
-                print ss[0]
+                if s % 10 == 0:
+                    saver.save(sess, 'my-model', global_step=s)
+                print ss[0],ss[1],ss[2],ss[3],ss[4],ss[5]
             sess.close()
             print file
             break
